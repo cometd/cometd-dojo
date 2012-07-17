@@ -13,3 +13,7 @@ for example with build tools.
 
 This repository is synchronized with the master repository on every
 CometD release.
+
+The code in this repository is available under either the modified
+[BSD license](http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L13)
+or the [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0).
