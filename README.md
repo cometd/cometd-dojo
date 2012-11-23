@@ -17,3 +17,40 @@ CometD release.
 The code in this repository is available under either the modified
 [BSD license](http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L13)
 or the [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0).
+
+### How to use it
+
+Download the CometD Dojo bindings for a specific release, browsing
+https://github.com/cometd/cometd-dojo/tags
+
+Unzip the CometD Dojo bindings in your directory structure, where you
+have already Dojo (and other libraries), under a directory of your 
+choice, for example directory `cometd-dojo/`:
+
+    dojo/
+    dijit/
+    cometd-dojo/
+        cometd/
+        org/
+        cometd.js
+
+Now you just need to tell Dojo where to find CometD, in this way:
+
+    <html>
+        <head>
+            <script type="text/javascript" src="dojo/dojo.js"
+                data-dojo-config="async: true, paths: { 
+                    'dojox/cometd': '../cometd-dojo/cometd' , 
+                    'org/cometd': '../cometd-dojo/org/cometd' 
+                }"></script>
+
+            <script type="text/javascript">
+                require(["dojox/cometd", "dojo/domReady!"], function(cometd) {
+                    // Use the cometd object here
+               });
+           </script>
+        </head>
+        <body>
+        </body>
+    </html>
+
