@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 the original author or authors.
+ * Copyright (c) 2008-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 'dojo/topic'],
         function(org_cometd, JSON, dojox, dojoXHR, dojoSCRIPT, topic)
 {
@@ -103,17 +102,17 @@ define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 
         {
             throw 'Deprecated function unsubscribe(string). Use unsubscribe(object) passing as argument the return value of subscribe()';
         }
-        cometd._unsubscribe(channelOrToken);
+        cometd._unsubscribe.apply(cometd, arguments);
     };
     cometd._metaHandshakeEvent = function(event)
     {
         event.action = "handshake";
-        topic.publish("/cometd/meta", [event]);
+        topic.publish("/cometd/meta", event);
     };
     cometd._metaConnectEvent = function(event)
     {
         event.action = "connect";
-        topic.publish("/cometd/meta", [event]);
+        topic.publish("/cometd/meta", event);
     };
     cometd.addListener('/meta/handshake', cometd, cometd._metaHandshakeEvent);
     cometd.addListener('/meta/connect', cometd, cometd._metaConnectEvent);
