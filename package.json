@@ -1,6 +1,6 @@
 {
     "name": "CometD",
-    "version": "2.9.1",
+    "version": "3.0.0",
     "description": "The CometD project is a scalable web messaging bus that uses WebSocket and HTTP AJAX push technology patterns known as 'Comet' techniques",
     "main": "cometd.js",
     "licenses": [{

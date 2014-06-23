@@ -68,6 +68,7 @@ org.cometd.Utils.setTimeout = function(cometd, funktion, delay)
     {
         try
         {
+            cometd._debug('Invoking timed function', funktion);
             funktion();
         }
         catch (x)
@@ -83,7 +84,7 @@ org.cometd.Utils.clearTimeout = function(timeoutHandle)
 };
 
 /**
- * A registry for transports used by the Cometd object.
+ * A registry for transports used by the CometD object.
  */
 org.cometd.TransportRegistry = function()
 {
@@ -753,6 +754,15 @@ org.cometd.CallbackPollingTransport = function()
         throw 'Abstract';
     };
 
+    function _failTransportFn(envelope, request, x)
+    {
+        var self = this;
+        return function()
+        {
+            self.transportFailure(envelope, request, 'error', x);
+        }
+    }
+
     _self.transportSend = function(envelope, request)
     {
         var self = this;
@@ -777,13 +787,10 @@ org.cometd.CallbackPollingTransport = function()
             {
                 if (length === 1)
                 {
+                    var x = 'Bayeux message too big (' + urlLength + ' bytes, max is ' + _maxLength + ') ' +
+                            'for transport ' + this.getType();
                     // Keep the semantic of calling response callbacks asynchronously after the request
-                    this.setTimeout(function()
-                    {
-                        self.transportFailure(envelope, request, {
-                            reason: 'Bayeux message too big, max is ' + _maxLength
-                        });
-                    }, 0);
+                    this.setTimeout(_failTransportFn.call(this, envelope, request, x), 0);
                     return;
                 }
 
@@ -1223,16 +1230,19 @@ org.cometd.WebSocketTransport = function()
         // and if it restarts we want to try websocket again.
         _webSocketSupported = _stickyReconnect && _webSocketConnected;
 
-        for (var id in _timeouts)
-        {
-            this.clearTimeout(_timeouts[id]);
-        }
+        var timeouts = _timeouts;
         _timeouts = {};
-
-        for (var key in _envelopes)
+        for (var id in timeouts)
         {
-            var envelope = _envelopes[key][0];
-            var metaConnect = _envelopes[key][1];
+            this.clearTimeout(timeouts[id]);
+        }
+
+        var envelopes = _envelopes;
+        _envelopes = {};
+        for (var key in envelopes)
+        {
+            var envelope = envelopes[key][0];
+            var metaConnect = envelopes[key][1];
             if (metaConnect)
             {
                 _connected = false;
@@ -1242,7 +1252,6 @@ org.cometd.WebSocketTransport = function()
                 reason: event.reason
             });
         }
-        _envelopes = {};
 
         _webSocket = null;
     };
@@ -1310,7 +1319,7 @@ org.cometd.WebSocketTransport = function()
 };
 
 /**
- * The constructor for a Cometd object, identified by an optional name.
+ * The constructor for a CometD object, identified by an optional name.
  * The default name is the string 'default'.
  * In the rare case a page needs more than one Bayeux conversation,
  * a new instance can be created via:
@@ -1318,10 +1327,10 @@ org.cometd.WebSocketTransport = function()
  * var bayeuxUrl2 = ...;
  *
  * // Dojo style
- * var cometd2 = new dojox.Cometd('another_optional_name');
+ * var cometd2 = new dojox.CometD('another_optional_name');
  *
  * // jQuery style
- * var cometd2 = new $.Cometd('another_optional_name');
+ * var cometd2 = new $.CometD('another_optional_name');
  *
  * cometd2.init({url: bayeuxUrl2});
  * </pre>
@@ -1331,7 +1340,7 @@ org.cometd.WebSocketTransport = function()
 // Be very careful in not changing the function order and pass this file every time through JSLint (http://jslint.com)
 // The only implied globals must be "dojo", "org" and "window", and check that there are no "unused" warnings
 // Failing to pass JSLint may result in shrinkers/minifiers to create an unusable file.
-org.cometd.Cometd = function(name)
+org.cometd.CometD = function(name)
 {
     var _cometd = this;
     var _name = name || 'default';
@@ -3206,7 +3215,7 @@ org.cometd.Cometd = function(name)
     };
 
     /**
-     * Returns the name assigned to this Cometd object, or the string 'default'
+     * Returns the name assigned to this CometD object, or the string 'default'
      * if no name has been explicitly passed as parameter to the constructor.
      */
     this.getName = function()
@@ -3253,13 +3262,8 @@ org.cometd.Cometd = function(name)
         return this._mixin(true, {}, _advice);
     };
 
-    // WebSocket handling for Firefox, which deploys WebSocket
-    // under the name of MozWebSocket in Firefox 6, 7, 8 and 9
+    // Use an alias to be less dependent on browser's quirks.
     org.cometd.WebSocket = window.WebSocket;
-    if (!org.cometd.WebSocket)
-    {
-        org.cometd.WebSocket = window.MozWebSocket;
-    }
 };
 
 if (typeof define === 'function' && define.amd)
