@@ -22,7 +22,7 @@ define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 
 
     dojox.Cometd = function(name)
     {
-        var cometd = new org_cometd.Cometd(name);
+        var cometd = new org_cometd.CometD(name);
 
         function LongPollingTransport()
         {
