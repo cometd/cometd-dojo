@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 'dojo/topic'],
-        function(org_cometd, JSON, dojox, dojoXHR, dojoSCRIPT, topic)
+define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/request/script'],
+        function(org_cometd, JSON, dojox, dojoXHR, dojoSCRIPT)
 {
     // Remap cometd JSON functions to dojo JSON functions
     org_cometd.JSON.toJSON = JSON.stringify;
     org_cometd.JSON.fromJSON = JSON.parse;
 
-    dojox.Cometd = function(name)
+    dojox.CometD = function(name)
     {
-        var cometd = new org_cometd.Cometd(name);
+        var cometd = new org_cometd.CometD(name);
 
         function LongPollingTransport()
         {
@@ -58,19 +58,17 @@ define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 
 
             that.jsonpSend = function(packet)
             {
-                var deferred = dojoSCRIPT.get({
-                    url: packet.url,
-                    sync: packet.sync === true,
-                    callbackParamName: 'jsonp',
-                    content: {
+                dojoSCRIPT.get(packet.url, {
+                    jsonp: 'jsonp',
+                    query: {
                         // In callback-polling, the content must be sent via the 'message' parameter
                         message: packet.body
                     },
-                    load: packet.onSuccess,
-                    error: function(error)
-                    {
-                        packet.onError(error.message, deferred ? deferred.ioArgs.error : error);
-                    }
+                    sync: packet.sync === true
+                }).then(packet.onSuccess, function (error)
+                {
+                    // Actually never called by Dojo, perhaps a Dojo bug.
+                    packet.onError(error);
                 });
                 return undefined;
             };
@@ -90,32 +88,8 @@ define(['org/cometd', 'dojo/json', 'dojox', 'dojo/_base/xhr', 'dojo/io/script', 
     };
 
     // The default cometd instance
-    var cometd = new dojox.Cometd();
+    var cometd = new dojox.CometD();
     dojox.cometd = cometd;
-
-    // Create a compatibility API for dojox.cometd instance with the original API.
-    cometd._init = cometd.init;
-    cometd._unsubscribe = cometd.unsubscribe;
-    cometd.unsubscribe = function(channelOrToken, objOrFunc, funcName)
-    {
-        if (typeof channelOrToken === 'string')
-        {
-            throw 'Deprecated function unsubscribe(string). Use unsubscribe(object) passing as argument the return value of subscribe()';
-        }
-        cometd._unsubscribe.apply(cometd, arguments);
-    };
-    cometd._metaHandshakeEvent = function(event)
-    {
-        event.action = "handshake";
-        topic.publish("/cometd/meta", event);
-    };
-    cometd._metaConnectEvent = function(event)
-    {
-        event.action = "connect";
-        topic.publish("/cometd/meta", event);
-    };
-    cometd.addListener('/meta/handshake', cometd, cometd._metaHandshakeEvent);
-    cometd.addListener('/meta/connect', cometd, cometd._metaConnectEvent);
 
     return cometd;
 });
