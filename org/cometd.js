@@ -775,7 +775,7 @@ org.cometd.CallbackPollingTransport = function()
         return function()
         {
             self.transportFailure(envelope, request, 'error', x);
-        }
+        };
     }
 
     _self.transportSend = function(envelope, request)
@@ -968,10 +968,11 @@ org.cometd.WebSocketTransport = function()
         var url = _cometd.getURL().replace(/^http/, 'ws');
         this._debug('Transport', this.getType(), 'connecting to URL', url);
 
+        var webSocket;
         try
         {
             var protocol = _cometd.getConfiguration().protocol;
-            var webSocket = protocol ? new org.cometd.WebSocket(url, protocol) : new org.cometd.WebSocket(url);
+            webSocket = protocol ? new org.cometd.WebSocket(url, protocol) : new org.cometd.WebSocket(url);
         }
         catch (x)
         {
@@ -1481,6 +1482,21 @@ org.cometd.CometD = function(name)
         return typeof value === 'function';
     }
 
+    function _zeroPad(value, length)
+    {
+        var result = '';
+        while (--length > 0)
+        {
+            if (value >= Math.pow(10, length))
+            {
+                break;
+            }
+            result += '0';
+        }
+        result += value;
+        return result;
+    }
+
     function _log(level, args)
     {
         if (window.console)
@@ -1488,6 +1504,9 @@ org.cometd.CometD = function(name)
             var logger = window.console[level];
             if (_isFunction(logger))
             {
+                var now = new Date();
+                [].splice.call(args, 0, 0, _zeroPad(now.getHours(), 2) + ':' + _zeroPad(now.getMinutes(), 2) + ':' +
+                        _zeroPad(now.getSeconds(), 2) + '.' + _zeroPad(now.getMilliseconds(), 3));
                 logger.apply(window.console, args);
             }
         }
@@ -1817,27 +1836,16 @@ org.cometd.CometD = function(name)
                 message.clientId = _clientId;
             }
 
-            var callback = undefined;
-            if (_isFunction(message._callback))
-            {
-                callback = message._callback;
-                // Remove the callback before calling the extensions.
-                delete message._callback;
-            }
-
             message = _applyOutgoingExtensions(message);
             if (message !== undefined && message !== null)
             {
                 // Extensions may have modified the message id, but we need to own it.
                 message.id = messageId;
                 messages[i] = message;
-                if (callback !== undefined)
-                {
-                    _callbacks[messageId] = callback;
-                }
             }
             else
             {
+                delete _callbacks[messageId];
                 messages.splice(i--, 1);
             }
         }
@@ -1935,6 +1943,7 @@ org.cometd.CometD = function(name)
     function _startBatch()
     {
         ++_batch;
+        _cometd._debug('Starting batch, depth', _batch);
     }
 
     function _flushBatch()
@@ -1956,6 +1965,7 @@ org.cometd.CometD = function(name)
     function _endBatch()
     {
         --_batch;
+        _cometd._debug('Ending batch, depth', _batch);
         if (_batch < 0)
         {
             throw 'Calls to startBatch() and endBatch() are not paired';
@@ -2113,7 +2123,6 @@ org.cometd.CometD = function(name)
             minimumVersion: version,
             channel: '/meta/handshake',
             supportedConnectionTypes: transportTypes,
-            _callback: handshakeCallback,
             advice: {
                 timeout: _advice.timeout,
                 interval: _advice.interval
@@ -2121,6 +2130,9 @@ org.cometd.CometD = function(name)
         };
         // Do not allow the user to override important fields.
         var message = _cometd._mixin(false, {}, _handshakeProps, bayeuxMessage);
+
+        // Save the callback.
+        _cometd._putCallback(message.id, handshakeCallback);
 
         // Pick up the first available transport as initial transport
         // since we don't know if the server supports it
@@ -2187,9 +2199,24 @@ org.cometd.CometD = function(name)
         }
     }
 
+    this._getCallback = function(messageId)
+    {
+        return _callbacks[messageId];
+    };
+
+    this._putCallback = function(messageId, callback)
+    {
+        var result = this._getCallback(messageId);
+        if (_isFunction(callback))
+        {
+            _callbacks[messageId] = callback;
+        }
+        return result;
+    };
+
     function _handleCallback(message)
     {
-        var callback = _callbacks[message.id];
+        var callback = _cometd._getCallback([message.id]);
         if (_isFunction(callback))
         {
             delete _callbacks[message.id];
@@ -2853,11 +2880,14 @@ org.cometd.CometD = function(name)
 
         var bayeuxMessage = {
             id: _nextMessageId(),
-            channel: '/meta/disconnect',
-            _callback: disconnectCallback
+            channel: '/meta/disconnect'
         };
         // Do not allow the user to override important fields.
         var message = this._mixin(false, {}, disconnectProps, bayeuxMessage);
+
+        // Save the callback.
+        _cometd._putCallback(message.id, disconnectCallback);
+
         _setStatus('disconnecting');
         _send(sync === true, [message], false, 'disconnect');
     };
@@ -3009,11 +3039,14 @@ org.cometd.CometD = function(name)
             var bayeuxMessage = {
                 id: _nextMessageId(),
                 channel: '/meta/subscribe',
-                subscription: channel,
-                _callback: subscribeCallback
+                subscription: channel
             };
             // Do not allow the user to override important fields.
             var message = this._mixin(false, {}, subscribeProps, bayeuxMessage);
+
+            // Save the callback.
+            _cometd._putCallback(message.id, subscribeCallback);
+
             _queueSend(message);
         }
 
@@ -3054,11 +3087,14 @@ org.cometd.CometD = function(name)
             var bayeuxMessage = {
                 id: _nextMessageId(),
                 channel: '/meta/unsubscribe',
-                subscription: channel,
-                _callback: unsubscribeCallback
+                subscription: channel
             };
             // Do not allow the user to override important fields.
             var message = this._mixin(false, {}, unsubscribeProps, bayeuxMessage);
+
+            // Save the callback.
+            _cometd._putCallback(message.id, unsubscribeCallback);
+
             _queueSend(message);
         }
     };
@@ -3122,11 +3158,14 @@ org.cometd.CometD = function(name)
         var bayeuxMessage = {
             id: _nextMessageId(),
             channel: channel,
-            data: content,
-            _callback: publishCallback
+            data: content
         };
         // Do not allow the user to override important fields.
         var message = this._mixin(false, {}, publishProps, bayeuxMessage);
+
+        // Save the callback.
+        _cometd._putCallback(message.id, publishCallback);
+
         _queueSend(message);
     };
 

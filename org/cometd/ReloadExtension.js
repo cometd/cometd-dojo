@@ -49,16 +49,23 @@
         {
             var _cometd;
             var _debug;
-            var _state = null;
+            var _state = {};
             var _cookieName = 'org.cometd.reload';
             var _cookiePath = '/';
             var _cookieMaxAge = 5;
             var _batch = false;
+            var _reloading = false;
 
             function _reload(config)
             {
-                if (_state && _state.handshakeResponse !== null)
+                if (_state.handshakeResponse)
                 {
+                    _reloading = true;
+                    var transport = _cometd.getTransport();
+                    if (transport)
+                    {
+                        transport.abort();
+                    }
                     _configure(config);
                     _state.cookiePath = _cookiePath;
                     var cookie = org_cometd.JSON.toJSON(_state);
@@ -143,24 +150,44 @@
                                 if (oldState.handshakeResponse && _similarState(oldState))
                                 {
                                     _debug('Reload extension restoring state', oldState);
+
+                                    // Since we are going to abort this message,
+                                    // we must save an eventual callback to restore
+                                    // it when we replay the handshake response.
+                                    var callback = _cometd._getCallback(message.id);
+
                                     setTimeout(function ()
                                     {
                                         _debug('Reload extension replaying handshake response', oldState.handshakeResponse);
                                         _state.handshakeResponse = oldState.handshakeResponse;
                                         _state.transportType = oldState.transportType;
-                                        _state.reloading = true;
-                                        var response = _cometd._mixin(true, {}, _state.handshakeResponse, {ext: {reload: true}});
+
+                                        // Restore the callback.
+                                        _cometd._putCallback(message.id, callback);
+
+                                        var response = _cometd._mixin(true, {}, _state.handshakeResponse, {
+                                            // Keep the response message id the same as the request.
+                                            id: message.id,
+                                            // Tells applications this is a handshake replayed by the reload extension.
+                                            ext: { reload: true }
+                                        });
+                                        // Use the same transport as before.
                                         response.supportedConnectionTypes = [_state.transportType];
+
                                         _cometd.receive(response);
                                         _debug('Reload extension replayed handshake response', response);
                                     }, 0);
 
-                                    // delay any sends until first connect is complete.
+                                    // Delay any sends until first connect is complete.
+                                    // This avoids that there is an old /meta/connect pending on server
+                                    // that will be resumed to send messages to the client, when the
+                                    // client has already closed the connection, thereby losing the messages.
                                     if (!_batch)
                                     {
                                         _batch = true;
                                         _cometd.startBatch();
                                     }
+
                                     // This handshake is aborted, as we will replay the prior handshake response
                                     return null;
                                 }
@@ -178,6 +205,18 @@
                     }
                     case '/meta/connect':
                     {
+                        if (_reloading === true)
+                        {
+                            // The reload causes the failure of the outstanding /meta/connect,
+                            // which CometD will react to by sending another. Here we avoid
+                            // that /meta/connect messages are sent between the reload and
+                            // the destruction of the JavaScript context, so that we are sure
+                            // that the first /meta/connect is the one triggered after the
+                            // replay of the /meta/handshake by this extension.
+                            _debug('Reload extension aborting /meta/connect during reload');
+                            return null;
+                        }
+
                         if (!_state.transportType)
                         {
                             _state.transportType = message.connectionType;
@@ -187,7 +226,7 @@
                     }
                     case '/meta/disconnect':
                     {
-                        _state = null;
+                        _state = {};
                         break;
                     }
                     default:
@@ -216,18 +255,18 @@
                             }
                             break;
                         }
-                        case '/meta/disconnect':
-                        {
-                            _state = null;
-                            break;
-                        }
                         case '/meta/connect':
                         {
                             if (_batch)
                             {
-                                _cometd.endBatch();
                                 _batch = false;
+                                _cometd.endBatch();
                             }
+                            break;
+                        }
+                        case '/meta/disconnect':
+                        {
+                            _state = {};
                             break;
                         }
                         default:
