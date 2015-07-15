@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014 the original author or authors.
+ * Copyright (c) 2008-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/* CometD Version 3.0.5 */
 
 // Namespaces for the cometd implementation
 this.org = this.org || {};
@@ -1114,6 +1116,16 @@ org.cometd.WebSocketTransport = function()
         this._debug('Transport', this.getType(), 'waiting at most', delay, 'ms for messages', messageIds, 'maxNetworkDelay', maxDelay, ', timeouts:', _timeouts);
     }
 
+    _self._notifySuccess = function(fn, messages)
+    {
+        fn.call(this, messages);
+    };
+
+    _self._notifyFailure = function(fn, ws, messages, failure)
+    {
+        fn.call(this, ws, messages, failure);
+    };
+
     function _send(webSocket, envelope, metaConnect)
     {
         try
@@ -1132,7 +1144,7 @@ org.cometd.WebSocketTransport = function()
             // Keep the semantic of calling response callbacks asynchronously after the request.
             this.setTimeout(function()
             {
-                envelope.onFailure(webSocket, envelope.messages, {
+                _self._notifyFailure(envelope.onFailure, webSocket, envelope.messages, {
                     exception: x
                 });
             }, 0);
@@ -1227,7 +1239,7 @@ org.cometd.WebSocketTransport = function()
             this._debug('Transport', this.getType(), 'removed envelope, envelopes', _envelopes);
         }
 
-        _successCallback.call(this, messages);
+        this._notifySuccess(_successCallback, messages);
 
         if (close)
         {
@@ -1261,7 +1273,7 @@ org.cometd.WebSocketTransport = function()
             {
                 _connected = false;
             }
-            envelope.onFailure(webSocket, envelope.messages, {
+            this._notifyFailure(envelope.onFailure, webSocket, envelope.messages, {
                 websocketCode: event.code,
                 reason: event.reason
             });
