@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* CometD Version 3.0.6 */
+/* CometD Version 3.0.7 */
 
 // Namespaces for the cometd implementation
 this.org = this.org || {};
