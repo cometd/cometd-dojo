@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 the original author or authors.
+ * Copyright (c) 2008-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,7 @@
                 if (channel == '/meta/handshake') {
                     _serverSupportsAcks = message.ext && message.ext.ack;
                     _debug('AckExtension: server supports acks', _serverSupportsAcks);
-                }
-                else if (channel == '/meta/connect' && message.successful && _serverSupportsAcks) {
+                } else if (channel == '/meta/connect' && message.successful && _serverSupportsAcks) {
                     var ext = message.ext;
                     if (ext && typeof ext.ack === 'number') {
                         _ackId = ext.ack;
@@ -73,8 +72,7 @@
                     }
                     message.ext.ack = _cometd && _cometd.ackEnabled !== false;
                     _ackId = -1;
-                }
-                else if (channel == '/meta/connect' && _serverSupportsAcks) {
+                } else if (channel == '/meta/connect' && _serverSupportsAcks) {
                     if (!message.ext) {
                         message.ext = {};
                     }
@@ -88,8 +86,7 @@
 
     if (typeof define === 'function' && define.amd) {
         define(['org/cometd'], bind);
-    }
-    else {
+    } else {
         bind(org.cometd);
     }
 })();

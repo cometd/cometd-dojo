@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015 the original author or authors.
+ * Copyright (c) 2008-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* CometD Version 3.0.8 */
+/* CometD Version 3.0.9 */
 
 // Namespaces for the cometd implementation
 this.org = this.org || {};
@@ -61,8 +61,7 @@ org.cometd.Utils.setTimeout = function(cometd, funktion, delay) {
         try {
             cometd._debug('Invoking timed function', funktion);
             funktion();
-        }
-        catch (x) {
+        } catch (x) {
             cometd._debug('Exception invoking timed function', funktion, x);
         }
     }, delay);
@@ -121,8 +120,7 @@ org.cometd.TransportRegistry = function() {
         if (!existing) {
             if (typeof index !== 'number') {
                 _types.push(type);
-            }
-            else {
+            } else {
                 _types.splice(index, 0, type);
             }
             _transports[type] = transport;
@@ -224,8 +222,7 @@ org.cometd.Transport = function() {
         if (org.cometd.Utils.isString(response)) {
             try {
                 return org.cometd.JSON.fromJSON(response);
-            }
-            catch (x) {
+            } catch (x) {
                 this._debug('Could not convert to JSON the following string', '"' + response + '"');
                 throw x;
             }
@@ -359,8 +356,7 @@ org.cometd.RequestTransport = function() {
         if (_requests.length < this.getConfiguration().maxConnections - 1) {
             _requests.push(request);
             _transportSend.call(this, envelope, request);
-        }
-        else {
+        } else {
             this._debug('Transport', this.getType(), 'queueing request', requestId, 'envelope', envelope);
             _envelopes.push([envelope, request]);
         }
@@ -395,8 +391,7 @@ org.cometd.RequestTransport = function() {
                 }
                 _queueSend.call(this, nextEnvelope);
                 this._debug('Transport completed request', request.id, nextEnvelope);
-            }
-            else {
+            } else {
                 // Keep the semantic of calling response callbacks asynchronously after the request
                 var self = this;
                 this.setTimeout(function() {
@@ -415,8 +410,7 @@ org.cometd.RequestTransport = function() {
     _self.complete = function(request, success, metaConnect) {
         if (metaConnect) {
             _metaConnectComplete.call(this, request);
-        }
-        else {
+        } else {
             _complete.call(this, request, success);
         }
     };
@@ -436,8 +430,7 @@ org.cometd.RequestTransport = function() {
             this.complete(request, true, request.metaConnect);
             if (responses && responses.length > 0) {
                 envelope.onSuccess(responses);
-            }
-            else {
+            } else {
                 envelope.onFailure(request.xhr, envelope.messages, {
                     httpCode: 204
                 });
@@ -472,8 +465,7 @@ org.cometd.RequestTransport = function() {
     _self.send = function(envelope, metaConnect) {
         if (metaConnect) {
             _metaConnectSend.call(this, envelope);
-        }
-        else {
+        } else {
             _queueSend.call(this, envelope);
         }
     };
@@ -511,8 +503,7 @@ org.cometd.RequestTransport = function() {
                 var state = xhr.readyState;
                 xhr.abort();
                 return state !== XMLHttpRequest.UNSENT;
-            }
-            catch (x) {
+            } catch (x) {
                 this._debug(x);
             }
         }
@@ -523,8 +514,7 @@ org.cometd.RequestTransport = function() {
         if (xhr) {
             try {
                 return xhr.status;
-            }
-            catch (x) {
+            } catch (x) {
                 this._debug(x);
             }
         }
@@ -570,13 +560,11 @@ org.cometd.LongPollingTransport = function() {
                             self.transportFailure(envelope, request, {
                                 httpCode: 204
                             });
-                        }
-                        else {
+                        } else {
                             success = true;
                             self.transportSuccess(envelope, request, received);
                         }
-                    }
-                    catch (x) {
+                    } catch (x) {
                         self._debug(x);
                         if (!success) {
                             _supportsCrossDomain = false;
@@ -601,15 +589,13 @@ org.cometd.LongPollingTransport = function() {
                         self.setTimeout(function() {
                             self.transportFailure(envelope, request, failure);
                         }, 0);
-                    }
-                    else {
+                    } else {
                         self.transportFailure(envelope, request, failure);
                     }
                 }
             });
             sameStack = false;
-        }
-        catch (x) {
+        } catch (x) {
             _supportsCrossDomain = false;
             // Keep the semantic of calling response callbacks asynchronously after the request
             this.setTimeout(function() {
@@ -721,13 +707,11 @@ org.cometd.CallbackPollingTransport = function() {
                             self.transportFailure(envelopeToSend, request, {
                                 httpCode: 204
                             });
-                        }
-                        else {
+                        } else {
                             success = true;
                             self.transportSuccess(envelopeToSend, request, received);
                         }
-                    }
-                    catch (x) {
+                    } catch (x) {
                         self._debug(x);
                         if (!success) {
                             self.transportFailure(envelopeToSend, request, {
@@ -746,15 +730,13 @@ org.cometd.CallbackPollingTransport = function() {
                         self.setTimeout(function() {
                             self.transportFailure(envelopeToSend, request, failure);
                         }, 0);
-                    }
-                    else {
+                    } else {
                         self.transportFailure(envelopeToSend, request, failure);
                     }
                 }
             });
             sameStack = false;
-        }
-        catch (xx) {
+        } catch (xx) {
             // Keep the semantic of calling response callbacks asynchronously after the request
             this.setTimeout(function() {
                 self.transportFailure(envelopeToSend, request, {
@@ -836,8 +818,7 @@ org.cometd.WebSocketTransport = function() {
             var protocol = _cometd.getConfiguration().protocol;
             context.webSocket = protocol ? new org.cometd.WebSocket(url, protocol) : new org.cometd.WebSocket(url);
             _connecting = context;
-        }
-        catch (x) {
+        } catch (x) {
             _webSocketSupported = false;
             this._debug('Exception while creating WebSocket object', x);
             throw x;
@@ -867,8 +848,7 @@ org.cometd.WebSocketTransport = function() {
                 _context = context;
                 _webSocketConnected = true;
                 self.onOpen(context);
-            }
-            else {
+            } else {
                 // We have a valid connection already, close this one.
                 _cometd._warn('Closing extra WebSocket connection', this, 'active connection', _context);
                 _forceClose.call(self, context, {code: 1000, reason: 'Extra Connection'});
@@ -954,13 +934,11 @@ org.cometd.WebSocketTransport = function() {
                     };
                 _storeEnvelope.call(this, context, envelope, metaConnect);
                 _websocketConnect.call(this, context);
-            }
-            else {
+            } else {
                 _storeEnvelope.call(this, context, envelope, metaConnect);
                 _webSocketSend.call(this, context, envelope, metaConnect);
             }
-        }
-        catch (x) {
+        } catch (x) {
             // Keep the semantic of calling response callbacks asynchronously after the request.
             var self = this;
             this.setTimeout(function() {
@@ -1118,8 +1096,7 @@ org.cometd.WebSocketTransport = function() {
             if (context.webSocket) {
                 context.webSocket.close(code, reason);
             }
-        }
-        catch (x) {
+        } catch (x) {
             this._debug(x);
         }
     };
@@ -1202,8 +1179,7 @@ org.cometd.CometD = function(name) {
     function _fieldValue(object, name) {
         try {
             return object[name];
-        }
-        catch (x) {
+        } catch (x) {
             return undefined;
         }
     }
@@ -1242,13 +1218,11 @@ org.cometd.CometD = function(name) {
                     if (deep && typeof prop === 'object' && prop !== null) {
                         if (prop instanceof Array) {
                             result[propName] = this._mixin(deep, targ instanceof Array ? targ : [], prop);
-                        }
-                        else {
+                        } else {
                             var source = typeof targ === 'object' && !(targ instanceof Array) ? targ : {};
                             result[propName] = this._mixin(deep, source, prop);
                         }
-                    }
-                    else {
+                    } else {
                         result[propName] = prop;
                     }
                 }
@@ -1352,8 +1326,7 @@ org.cometd.CometD = function(name) {
             if (afterURI !== undefined && afterURI.length > 0) {
                 _cometd._info('Appending message type to URI ' + uri + afterURI + ' is not supported, disabling \'appendMessageTypeToURL\' configuration');
                 _config.appendMessageTypeToURL = false;
-            }
-            else {
+            } else {
                 var uriSegments = uri.split('/');
                 var lastSegmentIndex = uriSegments.length - 1;
                 if (uri.match(/\/$/)) {
@@ -1417,19 +1390,16 @@ org.cometd.CometD = function(name) {
     function _applyExtension(scope, callback, name, message, outgoing) {
         try {
             return callback.call(scope, message);
-        }
-        catch (x) {
+        } catch (x) {
             var handler = _cometd.onExtensionException;
             if (_isFunction(handler)) {
                 _cometd._debug('Invoking extension exception handler', name, x);
                 try {
                     handler.call(_cometd, x, name, outgoing, message);
-                }
-                catch (xx) {
+                } catch (xx) {
                     _cometd._info('Exception during execution of extension exception handler', name, xx);
                 }
-            }
-            else {
+            } else {
                 _cometd._info('Exception during execution of extension', name, x);
             }
             return message;
@@ -1478,19 +1448,16 @@ org.cometd.CometD = function(name) {
                 if (subscription) {
                     try {
                         subscription.callback.call(subscription.scope, message);
-                    }
-                    catch (x) {
+                    } catch (x) {
                         var handler = _cometd.onListenerException;
                         if (_isFunction(handler)) {
                             _cometd._debug('Invoking listener exception handler', subscription, x);
                             try {
                                 handler.call(_cometd, x, subscription, subscription.listener, message);
-                            }
-                            catch (xx) {
+                            } catch (xx) {
                                 _cometd._info('Exception during execution of listener exception handler', subscription, xx);
                             }
-                        }
-                        else {
+                        } else {
                             _cometd._info('Exception during execution of listener', subscription, message, x);
                         }
                     }
@@ -1562,8 +1529,7 @@ org.cometd.CometD = function(name) {
                 // Extensions may have modified the message id, but we need to own it.
                 message.id = messageId;
                 messages[i] = message;
-            }
-            else {
+            } else {
                 delete _callbacks[messageId];
                 messages.splice(i--, 1);
             }
@@ -1591,8 +1557,7 @@ org.cometd.CometD = function(name) {
             onSuccess: function(rcvdMessages) {
                 try {
                     _handleMessages.call(_cometd, rcvdMessages);
-                }
-                catch (x) {
+                } catch (x) {
                     _cometd._info('Exception during handling of messages', x);
                 }
             },
@@ -1601,8 +1566,7 @@ org.cometd.CometD = function(name) {
                     var transport = _cometd.getTransport();
                     failure.connectionType = transport ? transport.getType() : "unknown";
                     _handleFailure.call(_cometd, conduit, messages, failure);
-                }
-                catch (x) {
+                } catch (x) {
                     _cometd._info('Exception during handling of failure', x);
                 }
             }
@@ -1614,8 +1578,7 @@ org.cometd.CometD = function(name) {
     function _queueSend(message) {
         if (_batch > 0 || _internalBatch === true) {
             _messageQueue.push(message);
-        }
-        else {
+        } else {
             _send(false, [message], false);
         }
     }
@@ -1741,8 +1704,7 @@ org.cometd.CometD = function(name) {
             _cometd._debug('Invoking transport exception handler', oldTransport, newTransport, failure);
             try {
                 handler.call(_cometd, failure, oldTransport, newTransport);
-            }
-            catch (x) {
+            } catch (x) {
                 _cometd._info('Exception during execution of transport exception handler', x);
             }
         }
@@ -1765,8 +1727,7 @@ org.cometd.CometD = function(name) {
         if (_isDisconnected()) {
             _transports.reset();
             _updateAdvice(_config.advice);
-        }
-        else {
+        } else {
             // We are retrying the handshake, either because another handshake failed
             // and we're backing off, or because the server timed us out and asks us to
             // re-handshake: in both cases, make sure that if the handshake succeeds
@@ -1849,19 +1810,16 @@ org.cometd.CometD = function(name) {
     function _notifyCallback(callback, message) {
         try {
             callback.call(_cometd, message);
-        }
-        catch (x) {
+        } catch (x) {
             var handler = _cometd.onCallbackException;
             if (_isFunction(handler)) {
                 _cometd._debug('Invoking callback exception handler', x);
                 try {
                     handler.call(_cometd, x, message);
-                }
-                catch (xx) {
+                } catch (xx) {
                     _cometd._info('Exception during execution of callback exception handler', xx);
                 }
-            }
-            else {
+            } else {
                 _cometd._info('Exception during execution of message callback', x);
             }
         }
@@ -1918,8 +1876,7 @@ org.cometd.CometD = function(name) {
         if (retry) {
             _increaseBackoff();
             _delayedHandshake();
-        }
-        else {
+        } else {
             _disconnect(true);
         }
     }
@@ -1944,8 +1901,7 @@ org.cometd.CometD = function(name) {
                 _cometd._warn(failure);
                 _disconnect(true);
                 return;
-            }
-            else if (_transport !== newTransport) {
+            } else if (_transport !== newTransport) {
                 _cometd._debug('Transport', _transport.getType(), '->', newTransport.getType());
                 _transport = newTransport;
             }
@@ -1976,8 +1932,7 @@ org.cometd.CometD = function(name) {
                 default:
                     throw 'Unrecognized advice action ' + action;
             }
-        }
-        else {
+        } else {
             _failHandshake(message);
         }
     }
@@ -1993,8 +1948,7 @@ org.cometd.CometD = function(name) {
             _cometd._warn('Could not negotiate transport; client=[' + transportTypes + ']');
             _disconnect(true);
             _failHandshake(message);
-        }
-        else {
+        } else {
             _cometd._debug('Transport', oldTransport.getType(), '->', newTransport.getType());
             _notifyTransportFailure(oldTransport.getType(), newTransport.getType(), message.failure);
             _failHandshake(message);
@@ -2054,8 +2008,7 @@ org.cometd.CometD = function(name) {
                 default:
                     throw 'Unrecognized advice action ' + action;
             }
-        }
-        else {
+        } else {
             _failConnect(message);
         }
     }
@@ -2078,8 +2031,7 @@ org.cometd.CometD = function(name) {
             _disconnect(false);
             _handleCallback(message);
             _notifyListeners('/meta/disconnect', message);
-        }
-        else {
+        } else {
             _failDisconnect(message);
         }
     }
@@ -2109,8 +2061,7 @@ org.cometd.CometD = function(name) {
         if (message.successful) {
             _handleCallback(message);
             _notifyListeners('/meta/subscribe', message);
-        }
-        else {
+        } else {
             _failSubscribe(message);
         }
     }
@@ -2129,8 +2080,7 @@ org.cometd.CometD = function(name) {
         if (message.successful) {
             _handleCallback(message);
             _notifyListeners('/meta/unsubscribe', message);
-        }
-        else {
+        } else {
             _failUnsubscribe(message);
         }
     }
@@ -2152,17 +2102,14 @@ org.cometd.CometD = function(name) {
             if (!_handleRemoteCall(message)) {
                 _notifyListeners(message.channel, message);
             }
-        }
-        else {
+        } else {
             if (message.successful === undefined) {
                 _cometd._warn('Unknown Bayeux Message', message);
-            }
-            else {
+            } else {
                 if (message.successful) {
                     _handleCallback(message);
                     _notifyListeners('/meta/publish', message);
-                }
-                else {
+                } else {
                     _failMessage(message);
                 }
             }
@@ -2278,8 +2225,7 @@ org.cometd.CometD = function(name) {
         if (_isFunction(scope)) {
             delegate.scope = undefined;
             delegate.method = scope;
-        }
-        else {
+        } else {
             if (_isString(callback)) {
                 if (!scope) {
                     throw 'Invalid scope ' + scope;
@@ -2288,8 +2234,7 @@ org.cometd.CometD = function(name) {
                 if (!_isFunction(delegate.method)) {
                     throw 'Invalid callback ' + callback + ' for scope ' + scope;
                 }
-            }
-            else if (!_isFunction(callback)) {
+            } else if (!_isFunction(callback)) {
                 throw 'Invalid callback ' + callback;
             }
         }
@@ -2500,8 +2445,7 @@ org.cometd.CometD = function(name) {
         try {
             delegate.method.call(delegate.scope);
             this.endBatch();
-        }
-        catch (x) {
+        } catch (x) {
             this._info('Exception during execution of batch', x);
             this.endBatch();
             throw x;
@@ -2690,8 +2634,7 @@ org.cometd.CometD = function(name) {
         if (_isFunction(content)) {
             publishCallback = content;
             content = publishProps = {};
-        }
-        else if (_isFunction(publishProps)) {
+        } else if (_isFunction(publishProps)) {
             publishCallback = publishProps;
             publishProps = {};
         }
@@ -2725,8 +2668,7 @@ org.cometd.CometD = function(name) {
             callback = content;
             content = {};
             timeout = _config.maxNetworkDelay;
-        }
-        else if (_isFunction(timeout)) {
+        } else if (_isFunction(timeout)) {
             callback = timeout;
             timeout = _config.maxNetworkDelay;
         }
@@ -2866,8 +2808,7 @@ org.cometd.CometD = function(name) {
             }
 
             return true;
-        }
-        else {
+        } else {
             this._info('Could not register extension with name', name, 'since another extension with the same name already exists');
             return false;
         }

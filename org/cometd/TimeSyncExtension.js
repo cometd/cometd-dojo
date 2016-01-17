@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 the original author or authors.
+ * Copyright (c) 2008-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -186,8 +186,7 @@
 
     if (typeof define === 'function' && define.amd) {
         define(['org/cometd'], bind);
-    }
-    else {
+    } else {
         bind(org.cometd);
     }
 })();
