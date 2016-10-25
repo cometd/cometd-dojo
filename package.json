@@ -1,19 +1,19 @@
 {
-    "name": "CometD",
-    "version": "3.0.10",
-    "description": "The CometD project is a scalable web messaging bus that uses WebSocket and HTTP AJAX push technology patterns known as 'Comet' techniques",
-    "main": "cometd.js",
-    "licenses": [{
-        "type":"Apache License, Version 2.0",
-        "url":"http://www.apache.org/licenses/LICENSE-2.0"
-    }],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/cometd/cometd-dojo.git"
-    },
-    "bugs": "https://bugs.cometd.org",
-    "homepage": "https://cometd.org",
-    "dependencies": {
-        "dojo": "1.11.2"
-      }
+  "name": "CometD",
+  "version": "3.1.0-RC0",
+  "description": "Comet and WebSocket library for web messaging",
+  "main": "cometd.js",
+  "licenses": [{
+    "type":"Apache License, Version 2.0",
+    "url":"http://www.apache.org/licenses/LICENSE-2.0"
+  }],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cometd/cometd-dojo.git"
+  },
+  "bugs": "https://bugs.cometd.org",
+  "homepage": "https://cometd.org",
+  "dependencies": {
+    "dojo": "1.11.2"
+  }
 }
