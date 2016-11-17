@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-define(['org/cometd/ReloadExtension', 'dojox/cometd'],
+define(['cometd/ReloadExtension', 'dojox/cometd'],
     function(ReloadExtension, cometd) {
         var result = new ReloadExtension();
         cometd.registerExtension('reload', result);
