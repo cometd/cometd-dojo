@@ -1,6 +1,6 @@
 {
   "name": "CometD",
-  "version": "4.0.0-BETA0",
+  "version": "4.0.0-BETA1",
   "description": "Comet and WebSocket library for web messaging",
   "main": "cometd.js",
   "licenses": [{
@@ -14,6 +14,6 @@
   "bugs": "https://bugs.cometd.org",
   "homepage": "https://cometd.org",
   "dependencies": {
-    "dojo": "1.12.1"
+    "dojo": "1.13.0"
   }
 }
