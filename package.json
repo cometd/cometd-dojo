@@ -1,6 +1,6 @@
 {
   "name": "CometD",
-  "version": "5.0.21",
+  "version": "5.0.22",
   "description": "Comet and WebSocket library for web messaging",
   "main": "cometd.js",
   "licenses": [{
